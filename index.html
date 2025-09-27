@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Booth</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+   
+
+    <div class="container">
+        <!-- Camera Section -->
+        <div class="camera-section">
+            <video id="video" width="640" height="480" autoplay></video>
+            <div class="buttons">
+                <button id="snap">Take Photo</button>
+                <button id="cancel">Cancel Last Photo</button>
+                <button id="download">Download</button>
+              
+            </div>
+        </div>
+
+        <!-- Photo Section -->
+        <div class="photos">
+            <canvas id="photo1"></canvas>
+            <canvas id="photo2"></canvas>
+            <canvas id="photo3"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        const video = document.getElementById('video');
+        const snapButton = document.getElementById('snap');
+        const downloadButton = document.getElementById('download');
+        const cancelButton = document.getElementById('cancel');
+        const canvases = [
+            document.getElementById('photo1'),
+            document.getElementById('photo2'),
+            document.getElementById('photo3')
+        ];
+        let photoIndex = 0;
+
+        // Access the webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the camera: ", err);
+            });
+
+        // Take a photo
+        snapButton.addEventListener('click', () => {
+            if (photoIndex < 3) {
+                const canvas = canvases[photoIndex];
+                const context = canvas.getContext('2d');
+                canvas.width = 150;
+                canvas.height = 150;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                photoIndex++;
+
+                // Add click effect
+                snapButton.style.backgroundColor = "#ff3366";
+                setTimeout(() => {
+                    snapButton.style.backgroundColor = "#ff6699";
+                }, 200);
+            }
+        });
+
+        // Cancel last photo
+        cancelButton.addEventListener('click', () => {
+            if (photoIndex > 0) {
+                photoIndex--;
+                const canvas = canvases[photoIndex];
+                const context = canvas.getContext('2d');
+                context.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
+
+        // Download all photos
+        downloadButton.addEventListener('click', () => {
+            canvases.forEach((canvas, index) => {
+                if (canvas.toDataURL() !== "data:,") { // Check if canvas is not empty
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = `photo${index + 1}.png`;
+                    link.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
